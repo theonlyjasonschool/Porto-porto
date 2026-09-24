@@ -4,13 +4,15 @@ An alpha prototype for a real-time walkie-talkie app.
 
 ## Run it
 
-Open `index.html` in a browser, or serve this folder with any static file server:
+Run the included Node server:
 
 ```bash
-python3 -m http.server 4173
+node server.js
 ```
 
-Then visit `http://localhost:4173`.
+Then visit `http://localhost:4173`. Use another port with `PORT=8080 node server.js`.
+
+The server also exposes `GET /health` for deployment checks.
 
 ## Alpha interactions
 
