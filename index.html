@@ -18,6 +18,16 @@
     .presence-state.chatting i:nth-child(2){animation-delay:.12s}
     .presence-state.chatting i:nth-child(3){animation-delay:.24s}
     @keyframes bounce-dot{0%,60%,100%{transform:translateY(0);opacity:.55}30%{transform:translateY(-5px);opacity:1}}
+    .profile-modal{max-width:480px}
+    .audio-section{border-top:1px solid var(--line);margin-top:22px;padding-top:18px}
+    .audio-section h3{font-size:12px;margin:0 0 5px}
+    .audio-section p{color:var(--muted);font-size:10px;line-height:1.5;margin:0 0 14px}
+    .device-field{display:block;color:var(--muted);font:9px "DM Mono",monospace;letter-spacing:.09em;text-transform:uppercase;margin-top:11px}
+    .device-field select{display:block;width:100%;height:38px;background:#121717;border:1px solid var(--line);color:var(--paper);outline:0;padding:0 9px;margin-top:7px;font-size:10px}
+    .device-field select:focus{border-color:var(--lime)}
+    .mic-permission{color:var(--muted-dark);font:9px "DM Mono",monospace;margin-top:12px}
+    .mic-permission.ready{color:var(--lime)}
+    .talk-hint.toggle-hint{color:var(--lime)}
   </style>
 </head>
 <body>
@@ -33,7 +43,7 @@
       <div class="topbar-actions">
         <div class="connection-status"><span class="pulse-dot"></span><span>CONNECTED</span><strong id="latency">42 ms</strong></div>
         <button class="icon-button" id="settingsButton" aria-label="Open settings" title="Settings">☷</button>
-        <button class="avatar" aria-label="Open profile">JD</button>
+        <button class="avatar" id="profileButton" aria-label="Open profile">JD</button>
       </div>
     </header>
 
@@ -53,7 +63,7 @@
           <div class="live-strip"><span class="live-indicator"><span class="pulse-dot"></span>LIVE CHANNEL</span><span class="live-rule"></span><span class="live-meta">Voice is open to one speaker at a time</span></div>
           <div class="speaker-card" id="speakerCard"><div class="speaker-avatar">AM</div><div class="speaker-info"><span class="speaker-label">CURRENTLY SPEAKING</span><strong id="speakerName">Alex Morgan</strong><span id="speakerDetail">“Loading dock is clear. Moving to bay four.”</span></div><div class="waveform" aria-hidden="true" id="waveform"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="speaker-time">0:08</span></div>
           <div class="empty-speaker" id="emptySpeaker"><span>CHANNEL READY</span><strong>Hold to transmit</strong></div>
-          <div class="talk-control"><div class="talk-hint"><span class="keycap">V</span><span>Hold <b>V</b> to talk</span></div><button class="ptt-button" id="pttButton" aria-label="Push to talk"><span class="mic-icon">●</span><span class="ptt-label">PUSH TO TALK</span><span class="ptt-sub">Release to send</span></button><div class="talk-hint right"><span>Touch and hold</span><span class="finger-icon">♧</span></div></div>
+          <div class="talk-control"><div class="talk-hint"><span class="keycap">V</span><span>Hold <b>V</b> to talk</span></div><button class="ptt-button" id="pttButton" aria-label="Toggle push to talk"><span class="mic-icon">●</span><span class="ptt-label">TAP TO TALK</span><span class="ptt-sub">Tap again to stop</span></button><div class="talk-hint right toggle-hint"><span>Tap to toggle</span><span class="finger-icon">♧</span></div></div>
           <div class="stage-foot"><span><span class="green-dot"></span>Secure voice channel</span><span>All times local · 14:32</span></div>
         </div>
 
@@ -68,6 +78,7 @@
   </div>
 
   <div class="modal-backdrop" id="channelModal" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button class="modal-close" id="closeChannelModal" aria-label="Close">×</button><span class="eyebrow">NEW CHANNEL</span><h2 id="modalTitle">Create a space to talk</h2><p>Make a channel for your crew, project, or moment.</p><label class="field-label">Channel name<input id="newChannelName" type="text" maxlength="24" placeholder="e.g. Night shift" /></label><div class="privacy-options"><button class="privacy-option selected" data-privacy="public"><span>◉</span><strong>Public</strong><small>Anyone in your network can join</small></button><button class="privacy-option" data-privacy="private"><span>◉</span><strong>Private</strong><small>Invite-only conversation</small></button></div><button class="create-channel-button" id="createChannel">Create channel <span>→</span></button></div></div>
+  <div class="modal-backdrop" id="profileModal" hidden><div class="modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="profileTitle"><button class="modal-close" id="closeProfileModal" aria-label="Close">×</button><span class="eyebrow">YOUR PROFILE</span><h2 id="profileTitle">Profile and audio</h2><p>Choose the name and headset this device will use in Porto Porto.</p><label class="field-label">Display name<input id="displayName" type="text" maxlength="24" value="Jordan Davis" placeholder="Your name" /></label><div class="audio-section"><h3>Audio devices</h3><p>Wired and Bluetooth headphones appear here after microphone permission is granted.</p><label class="device-field">Microphone<select id="microphoneSelect"><option>Default microphone</option></select></label><label class="device-field">Headphones / speaker<select id="speakerSelect"><option>Default output</option></select></label><div class="mic-permission" id="micPermission">Microphone permission not requested</div></div><button class="create-channel-button" id="saveProfile">Save changes <span>→</span></button></div></div>
   <script src="app.js"></script>
 </body>
 </html>

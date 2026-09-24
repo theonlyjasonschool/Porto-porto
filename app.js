@@ -8,7 +8,11 @@ const channels = [
 let activeChannel = channels[0];
 let selectedPrivacy = 'public';
 let keyHeld = false;
+let isTransmitting = false;
+let micStream = null;
+let currentUserName = 'Jordan Davis';
 const $ = (selector) => document.querySelector(selector);
+const initialsFor = (name) => name.split(/\s+/).map((part) => part[0]).join('').slice(0, 2).toUpperCase();
 
 function channelMarkup(channel) {
   return `<button class="channel-item ${channel.name === activeChannel.name ? 'active' : ''}" data-channel="${channel.name}"><span class="channel-symbol">${channel.symbol}</span><span class="channel-copy"><strong>${channel.name}</strong><span>${channel.type === 'private' ? 'Private' : `${channel.members} members`}</span></span>${channel.name === 'Operations' ? '<span class="channel-alert">2</span>' : ''}</button>`;
@@ -35,7 +39,7 @@ function selectChannel(name) {
 function addActivity(text, time = 'NOW', color = 'orange', tag = 'INFO') {
   const row = document.createElement('div');
   row.className = 'activity-row';
-  row.innerHTML = `<span class="activity-time">${time}</span><div class="activity-avatar ${color}">JD</div><div><strong>Jordan Davis</strong><span> ${text}</span></div><span class="activity-tag">${tag}</span>`;
+  row.innerHTML = `<span class="activity-time">${time}</span><div class="activity-avatar ${color}">${initialsFor(currentUserName)}</div><div><strong>${currentUserName}</strong><span> ${text}</span></div><span class="activity-tag">${tag}</span>`;
   $('#activityList').prepend(row);
 }
 function showToast(message, author = 'Jordan') {
@@ -45,29 +49,64 @@ function showToast(message, author = 'Jordan') {
   $('#toastStack').append(toast);
   window.setTimeout(() => toast.remove(), 5100);
 }
-function setTalking(talking) {
-  keyHeld = talking;
+async function requestMicrophone() {
+  if (micStream || !navigator.mediaDevices?.getUserMedia) return true;
+  try {
+    micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    $('#micPermission').textContent = 'Microphone ready';
+    $('#micPermission').classList.add('ready');
+    await populateAudioDevices();
+    return true;
+  } catch (error) {
+    showToast('Microphone permission is needed to speak', 'SYSTEM');
+    $('#micPermission').textContent = 'Microphone permission was blocked';
+    return false;
+  }
+}
+async function populateAudioDevices() {
+  if (!navigator.mediaDevices?.enumerateDevices) return;
+  const devices = await navigator.mediaDevices.enumerateDevices();
+  const microphone = $('#microphoneSelect');
+  const speaker = $('#speakerSelect');
+  microphone.innerHTML = '';
+  speaker.innerHTML = '';
+  devices.filter((device) => device.kind === 'audioinput').forEach((device, index) => {
+    microphone.add(new Option(device.label || `Microphone ${index + 1}`, device.deviceId));
+  });
+  devices.filter((device) => device.kind === 'audiooutput').forEach((device, index) => {
+    speaker.add(new Option(device.label || `Speaker ${index + 1}`, device.deviceId));
+  });
+}
+async function setTalking(talking, source = 'toggle') {
+  if (talking && !(await requestMicrophone())) return;
+  isTransmitting = talking;
+  if (source !== 'hold') keyHeld = talking;
   $('#pttButton').classList.toggle('active', talking);
-  $('#pttButton .ptt-label').textContent = talking ? 'TRANSMITTING' : 'PUSH TO TALK';
-  $('#pttButton .ptt-sub').textContent = talking ? 'Release to send' : 'Release to send';
+  $('#pttButton .ptt-label').textContent = talking ? 'TRANSMITTING' : 'TAP TO TALK';
+  $('#pttButton .ptt-sub').textContent = talking ? 'Tap again to stop' : 'Tap again to stop';
   $('#speakerCard').style.display = talking ? 'none' : 'flex';
   $('#emptySpeaker').style.display = talking ? 'flex' : 'none';
+  if (navigator.mediaSession) navigator.mediaSession.playbackState = talking ? 'playing' : 'paused';
   if (talking) {
     addActivity('started transmitting', 'NOW', 'green', 'LIVE');
     showToast('You are live on the channel', 'SYSTEM');
+  } else {
+    showToast('Voice transmission stopped', 'SYSTEM');
   }
 }
 function stopTalking() {
-  if (!keyHeld) return;
-  setTalking(false);
-  showToast('Voice note sent to the channel', 'SYSTEM');
+  if (!keyHeld || !isTransmitting) return;
+  setTalking(false, 'hold');
+}
+
+function toggleTalking() {
+  setTalking(!isTransmitting, 'toggle');
 }
 
 renderChannels();
 $('#channelSearch').addEventListener('input', (event) => renderChannels(event.target.value));
-$('#pttButton').addEventListener('pointerdown', (event) => { event.preventDefault(); setTalking(true); });
-window.addEventListener('pointerup', stopTalking);
-window.addEventListener('keydown', (event) => { if (event.key.toLowerCase() === 'v' && !event.repeat && document.activeElement.tagName !== 'INPUT') setTalking(true); });
+$('#pttButton').addEventListener('click', toggleTalking);
+window.addEventListener('keydown', (event) => { if (event.key.toLowerCase() === 'v' && !event.repeat && document.activeElement.tagName !== 'INPUT') setTalking(true, 'hold'); });
 window.addEventListener('keyup', (event) => { if (event.key.toLowerCase() === 'v') stopTalking(); });
 $('#sendChat').addEventListener('click', sendChat);
 $('#chatInput').addEventListener('input', (event) => { $('#charCount').textContent = `${event.target.value.length}/160`; });
@@ -97,5 +136,37 @@ $('#createChannel').addEventListener('click', () => {
   showToast(`${name} is ready to use`, 'SYSTEM');
 });
 $('#inviteButton').addEventListener('click', () => showToast('Invite link copied to clipboard', 'SYSTEM'));
-$('#settingsButton').addEventListener('click', () => showToast('Settings are coming in the next alpha', 'SYSTEM'));
+$('#settingsButton').addEventListener('click', openProfileModal);
+$('#profileButton').addEventListener('click', openProfileModal);
+$('#closeProfileModal').addEventListener('click', () => { $('#profileModal').hidden = true; });
+$('#profileModal').addEventListener('click', (event) => { if (event.target.id === 'profileModal') $('#profileModal').hidden = true; });
+$('#saveProfile').addEventListener('click', () => {
+  const name = $('#displayName').value.trim() || 'Jordan Davis';
+  currentUserName = name;
+  document.querySelectorAll('.user-card strong').forEach((element) => { element.textContent = name; });
+  document.querySelector('.user-card .avatar').textContent = initialsFor(name);
+  $('#profileButton').textContent = initialsFor(name);
+  $('#profileModal').hidden = true;
+  showToast(`Profile updated to ${name}`, 'SYSTEM');
+});
+async function openProfileModal() {
+  $('#profileModal').hidden = false;
+  await populateAudioDevices();
+}
+$('#microphoneSelect').addEventListener('change', async (event) => {
+  if (!navigator.mediaDevices?.getUserMedia) return;
+  const deviceId = event.target.value;
+  if (micStream) micStream.getTracks().forEach((track) => track.stop());
+  micStream = await navigator.mediaDevices.getUserMedia({ audio: { deviceId: { exact: deviceId } } });
+  $('#micPermission').textContent = 'Microphone ready';
+  $('#micPermission').classList.add('ready');
+});
+if (navigator.mediaSession) {
+  try {
+    navigator.mediaSession.setActionHandler('play', toggleTalking);
+    navigator.mediaSession.setActionHandler('pause', toggleTalking);
+  } catch (error) {
+    console.info('Media buttons are not supported by this browser.');
+  }
+}
 setInterval(() => { $('#latency').textContent = `${38 + Math.floor(Math.random() * 12)} ms`; }, 4000);
