@@ -14,6 +14,16 @@ Then visit `http://localhost:4173`. Use another port with `PORT=8080 node server
 
 The server also exposes `GET /health` for deployment checks.
 
+## Deploy on Render
+
+Create a **Web Service** from this repository. Render can use the included `render.yaml`, or set these values manually:
+
+- Build command: `npm install`
+- Start command: `npm start`
+- Health check path: `/health`
+
+Do not deploy this as a Static Site, because the Node server needs to run as a Web Service.
+
 ## Alpha interactions
 
 - Hold the large button on touch or mouse to push to talk.
