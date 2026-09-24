@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#101316" />
+  <title>Porto Porto | Alpha</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+  <style>
+    .presence-state{margin-left:auto;min-width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:13px}
+    .presence-state.speaking{color:var(--orange);font-size:14px;filter:saturate(.9)}
+    .presence-state.messaged{color:var(--blue);font-size:15px}
+    .presence-state.chatting{gap:3px}
+    .presence-state.chatting i{width:4px;height:4px;border-radius:50%;background:var(--lime);animation:bounce-dot .8s ease-in-out infinite}
+    .presence-state.chatting i:nth-child(2){animation-delay:.12s}
+    .presence-state.chatting i:nth-child(3){animation-delay:.24s}
+    @keyframes bounce-dot{0%,60%,100%{transform:translateY(0);opacity:.55}30%{transform:translateY(-5px);opacity:1}}
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="topbar">
+      <div class="brand-lockup">
+        <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
+        <div>
+          <div class="brand-name">PORTO <em>PORTO</em></div>
+          <div class="brand-kicker">REAL-TIME COMMS / ALPHA</div>
+        </div>
+      </div>
+      <div class="topbar-actions">
+        <div class="connection-status"><span class="pulse-dot"></span><span>CONNECTED</span><strong id="latency">42 ms</strong></div>
+        <button class="icon-button" id="settingsButton" aria-label="Open settings" title="Settings">☷</button>
+        <button class="avatar" aria-label="Open profile">JD</button>
+      </div>
+    </header>
+
+    <main class="workspace">
+      <aside class="sidebar panel-border">
+        <div class="sidebar-heading"><div><span class="eyebrow">YOUR NETWORK</span><h2>Channels</h2></div><button class="add-button" id="openChannelModal" aria-label="Create channel" title="Create channel">+</button></div>
+        <label class="search-box"><span>⌕</span><input id="channelSearch" type="search" placeholder="Find a channel" /></label>
+        <div class="channel-section"><span class="section-label">PINNED</span><div id="pinnedChannels"></div></div>
+        <div class="channel-section all-channels"><span class="section-label">ALL CHANNELS</span><div id="allChannels"></div></div>
+        <div class="sidebar-footer"><div class="user-card"><div class="avatar small">JD</div><div><strong>Jordan Davis</strong><span>Available to talk</span></div><span class="availability-dot"></span></div></div>
+      </aside>
+
+      <section class="main-stage">
+        <div class="channel-header"><div class="channel-title-wrap"><div class="channel-icon public" id="channelIcon">⌁</div><div><div class="channel-title-line"><h1 id="channelName">Operations</h1><span class="privacy-badge" id="privacyBadge">PUBLIC</span></div><p id="channelDescription">General coordination · Anyone can join</p></div></div><div class="channel-tools"><span class="member-count"><span class="member-stack"><i>AM</i><i>RK</i><i>+5</i></span><span id="memberCount">8 online</span></span><button class="tool-button" id="inviteButton">Invite <span>↗</span></button></div></div>
+
+        <div class="talk-zone">
+          <div class="live-strip"><span class="live-indicator"><span class="pulse-dot"></span>LIVE CHANNEL</span><span class="live-rule"></span><span class="live-meta">Voice is open to one speaker at a time</span></div>
+          <div class="speaker-card" id="speakerCard"><div class="speaker-avatar">AM</div><div class="speaker-info"><span class="speaker-label">CURRENTLY SPEAKING</span><strong id="speakerName">Alex Morgan</strong><span id="speakerDetail">“Loading dock is clear. Moving to bay four.”</span></div><div class="waveform" aria-hidden="true" id="waveform"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="speaker-time">0:08</span></div>
+          <div class="empty-speaker" id="emptySpeaker"><span>CHANNEL READY</span><strong>Hold to transmit</strong></div>
+          <div class="talk-control"><div class="talk-hint"><span class="keycap">V</span><span>Hold <b>V</b> to talk</span></div><button class="ptt-button" id="pttButton" aria-label="Push to talk"><span class="mic-icon">●</span><span class="ptt-label">PUSH TO TALK</span><span class="ptt-sub">Release to send</span></button><div class="talk-hint right"><span>Touch and hold</span><span class="finger-icon">♧</span></div></div>
+          <div class="stage-foot"><span><span class="green-dot"></span>Secure voice channel</span><span>All times local · 14:32</span></div>
+        </div>
+
+        <div class="activity-panel"><div class="activity-heading"><span class="eyebrow">CHANNEL ACTIVITY</span><button class="clear-button" id="clearActivity">Clear</button></div><div class="activity-list" id="activityList"><div class="activity-row"><span class="activity-time">14:31</span><div class="activity-avatar orange">RK</div><div><strong>Riley Kim</strong><span> joined the channel</span></div><span class="activity-tag">JOINED</span></div><div class="activity-row"><span class="activity-time">14:29</span><div class="activity-avatar green">AM</div><div><strong>Alex Morgan</strong><span> started a voice session</span></div><span class="activity-tag live">LIVE</span></div></div></div>
+      </section>
+
+      <aside class="right-rail"><div class="rail-heading"><div><span class="eyebrow">PEOPLE HERE</span><h2>8 online</h2></div><button class="more-button" aria-label="More people options">•••</button></div><div class="presence-list" id="presenceList"><div class="person" data-person="Riley Kim"><div class="person-avatar orange">RK<span></span></div><div><strong>Riley Kim</strong><span>Chatting</span></div><span class="presence-state chatting" aria-label="Chatting"><i></i><i></i><i></i></span></div><div class="person" data-person="Alex Morgan"><div class="person-avatar green">AM<span></span></div><div><strong>Alex Morgan</strong><span>Speaking</span></div><span class="presence-state speaking" aria-label="Speaking">🔊</span></div><div class="person" data-person="Taylor Ng"><div class="person-avatar blue">TN<span></span></div><div><strong>Taylor Ng</strong><span>Chatting</span></div><span class="presence-state chatting" aria-label="Chatting"><i></i><i></i><i></i></span></div><div class="person" data-person="Sam Carter"><div class="person-avatar pink">SC<span></span></div><div><strong>Sam Carter</strong><span>Sent a chat</span></div><span class="presence-state messaged" aria-label="Sent a chat">✉</span></div><div class="person"><div class="person-avatar neutral">+4</div><div><strong>Other members</strong><span>Tap to view all</span></div></div></div><div class="quick-note"><span class="note-icon">✦</span><div><strong>Alpha note</strong><p>Voice transport is simulated in this preview. Connect a server to go live.</p></div></div></aside>
+    </main>
+
+    <div class="chat-composer"><div class="chat-icon">✦</div><input id="chatInput" type="text" maxlength="160" placeholder="Send a message to Operations..." /><span class="char-count" id="charCount">0/160</span><button id="sendChat" class="send-button" aria-label="Send message">↑</button></div>
+    <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+  </div>
+
+  <div class="modal-backdrop" id="channelModal" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button class="modal-close" id="closeChannelModal" aria-label="Close">×</button><span class="eyebrow">NEW CHANNEL</span><h2 id="modalTitle">Create a space to talk</h2><p>Make a channel for your crew, project, or moment.</p><label class="field-label">Channel name<input id="newChannelName" type="text" maxlength="24" placeholder="e.g. Night shift" /></label><div class="privacy-options"><button class="privacy-option selected" data-privacy="public"><span>◉</span><strong>Public</strong><small>Anyone in your network can join</small></button><button class="privacy-option" data-privacy="private"><span>◉</span><strong>Private</strong><small>Invite-only conversation</small></button></div><button class="create-channel-button" id="createChannel">Create channel <span>→</span></button></div></div>
+  <script src="app.js"></script>
+</body>
+</html>
