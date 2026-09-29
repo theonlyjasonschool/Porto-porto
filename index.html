@@ -28,10 +28,49 @@
     .mic-permission{color:var(--muted-dark);font:9px "DM Mono",monospace;margin-top:12px}
     .mic-permission.ready{color:var(--lime)}
     .talk-hint.toggle-hint{color:var(--lime)}
+    [hidden]{display:none!important}
+    .server-directory{min-height:100vh;padding:34px clamp(18px,6vw,88px);background:radial-gradient(circle at 80% 8%,#293a36 0,#151b1c 34%,#101315 72%)}
+    .directory-top{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line);padding-bottom:22px}
+    .directory-content{max-width:1100px;margin:clamp(50px,10vh,110px) auto 0}
+    .directory-content h1{font-size:clamp(28px,4vw,42px);margin:12px 0 8px}
+    .directory-content>p{color:var(--muted);margin:0 0 30px}
+    .server-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}
+    .server-card{display:flex;align-items:center;gap:14px;text-align:left;min-height:94px;background:#191f20;border:1px solid var(--line);padding:16px;transition:border-color .18s,transform .18s}
+    .server-card:hover,.server-card:focus-visible{border-color:var(--lime);transform:translateY(-2px);outline:0}
+    .server-mark{width:42px;height:42px;display:grid;place-items:center;flex:none;background:#2b3732;color:var(--lime);font:15px "DM Mono",monospace}
+    .server-card-copy{display:grid;gap:5px;min-width:0}
+    .server-card-copy strong{font-size:13px}
+    .server-card-copy span{color:var(--muted);font-size:10px}
+    .server-arrow{margin-left:auto;color:var(--lime);font-size:20px}
+    .servers-button{background:transparent;color:var(--muted);font:9px "DM Mono",monospace;letter-spacing:.1em;padding:8px}
+    .servers-button:hover{color:var(--lime)}
+    .activity-panel{max-height:240px;overflow:auto}
+    .activity-list{display:grid;gap:8px}
+    .message-row .message-copy{min-width:0;overflow-wrap:anywhere}
+    .message-row .message-copy strong{display:block;margin-bottom:2px}
+    .message-row .message-copy span{color:var(--paper)}
+    .video-call-button,.video-control{background:#252d2d;border:1px solid var(--line);color:var(--paper);padding:8px 12px;font-size:10px}
+    .video-call-button:hover,.video-control:hover{border-color:var(--lime);color:var(--lime)}
+    .video-room{border-top:1px solid var(--line);padding:15px 0 17px}
+    .video-room-header,.video-controls{display:flex;align-items:center;justify-content:space-between;gap:10px}
+    .video-room-header{margin-bottom:11px;color:var(--muted);font:9px "DM Mono",monospace;letter-spacing:.08em;text-transform:uppercase}
+    .video-room-header strong{color:var(--lime);font-weight:500}
+    .video-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:8px}
+    .video-tile{position:relative;min-height:150px;aspect-ratio:16/9;background:#0b0e0e;border:1px solid var(--line);overflow:hidden}
+    .video-tile video{display:block;width:100%;height:100%;object-fit:cover}
+    .video-tile>span{position:absolute;bottom:8px;left:9px;padding:4px 7px;background:#101416d9;color:var(--paper);font-size:10px}
+    .video-controls{justify-content:flex-end;margin-top:10px}
+    .video-control.danger{color:#ff9a80}
+    @media(max-width:720px){.video-grid{grid-template-columns:repeat(auto-fit,minmax(135px,1fr))}.video-tile{min-height:125px}.video-call-button{padding:7px 9px}}
+    @media(max-width:600px){.server-directory{padding:22px 16px}.directory-top{padding-bottom:17px}.directory-content{margin-top:52px}.server-list{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
-  <div class="app-shell">
+  <main class="server-directory" id="serverDirectory">
+    <div class="directory-top"><div class="brand-lockup"><div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div><div><div class="brand-name">PORTO <em>PORTO</em></div><div class="brand-kicker">REAL-TIME COMMS / ALPHA</div></div></div><span class="eyebrow">SERVER DIRECTORY</span></div>
+    <section class="directory-content"><span class="eyebrow">YOUR NETWORK</span><h1>Choose a server</h1><p>Pick a space to see its rooms and join the conversation.</p><div class="server-list" id="serverList"></div></section>
+  </main>
+  <div class="app-shell" id="appShell" hidden>
     <header class="topbar">
       <div class="brand-lockup">
         <div class="brand-mark" aria-hidden="true"><span></span><span></span><span></span></div>
@@ -42,15 +81,16 @@
       </div>
       <div class="topbar-actions">
         <div class="connection-status"><span class="pulse-dot"></span><span>CONNECTED</span><strong id="latency">42 ms</strong></div>
-        <button class="icon-button" id="settingsButton" aria-label="Open settings" title="Settings">☷</button>
-        <button class="avatar" id="profileButton" aria-label="Open profile">JD</button>
+        <button class="servers-button" id="serversButton">SERVERS</button>
+        <button class="icon-button" id="settingsButton" aria-label="Create a room" title="Create room">☷</button>
+        <button class="avatar" id="profileButton" aria-label="Edit profile" title="Edit profile">JD</button>
       </div>
     </header>
 
     <main class="workspace">
       <aside class="sidebar panel-border">
-        <div class="sidebar-heading"><div><span class="eyebrow">YOUR NETWORK</span><h2>Channels</h2></div><button class="add-button" id="openChannelModal" aria-label="Create channel" title="Create channel">+</button></div>
-        <label class="search-box"><span>⌕</span><input id="channelSearch" type="search" placeholder="Find a channel" /></label>
+        <div class="sidebar-heading"><div><span class="eyebrow" id="serverLabel">YOUR SERVER</span><h2>Rooms</h2></div><button class="add-button" id="openChannelModal" aria-label="Create room" title="Create room">+</button></div>
+        <label class="search-box"><span>⌕</span><input id="channelSearch" type="search" placeholder="Find a room" /></label>
         <div class="channel-section"><span class="section-label">PINNED</span><div id="pinnedChannels"></div></div>
         <div class="channel-section all-channels"><span class="section-label">ALL CHANNELS</span><div id="allChannels"></div></div>
         <div class="sidebar-footer"><div class="user-card"><div class="avatar small">JD</div><div><strong>Jordan Davis</strong><span>Available to talk</span></div><span class="availability-dot"></span></div></div>
@@ -60,25 +100,31 @@
         <div class="channel-header"><div class="channel-title-wrap"><div class="channel-icon public" id="channelIcon">⌁</div><div><div class="channel-title-line"><h1 id="channelName">Operations</h1><span class="privacy-badge" id="privacyBadge">PUBLIC</span></div><p id="channelDescription">General coordination · Anyone can join</p></div></div><div class="channel-tools"><span class="member-count"><span class="member-stack"><i>AM</i><i>RK</i><i>+5</i></span><span id="memberCount">8 online</span></span><button class="tool-button" id="inviteButton">Invite <span>↗</span></button></div></div>
 
         <div class="talk-zone">
-          <div class="live-strip"><span class="live-indicator"><span class="pulse-dot"></span>LIVE CHANNEL</span><span class="live-rule"></span><span class="live-meta">Voice is open to one speaker at a time</span></div>
+          <div class="live-strip"><span class="live-indicator"><span class="pulse-dot"></span>LIVE CHANNEL</span><span class="live-rule"></span><span class="live-meta">Voice is open to one speaker at a time</span><button class="video-call-button" id="videoButton">Start video</button></div>
           <div class="speaker-card" id="speakerCard"><div class="speaker-avatar">AM</div><div class="speaker-info"><span class="speaker-label">CURRENTLY SPEAKING</span><strong id="speakerName">Alex Morgan</strong><span id="speakerDetail">“Loading dock is clear. Moving to bay four.”</span></div><div class="waveform" aria-hidden="true" id="waveform"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span class="speaker-time">0:08</span></div>
           <div class="empty-speaker" id="emptySpeaker"><span>CHANNEL READY</span><strong>Hold to transmit</strong></div>
           <div class="talk-control"><div class="talk-hint"><span class="keycap">V</span><span>Hold <b>V</b> to talk</span></div><button class="ptt-button" id="pttButton" aria-label="Toggle push to talk"><span class="mic-icon">●</span><span class="ptt-label">TAP TO TALK</span><span class="ptt-sub">Tap again to stop</span></button><div class="talk-hint right toggle-hint"><span>Tap to toggle</span><span class="finger-icon">♧</span></div></div>
           <div class="stage-foot"><span><span class="green-dot"></span>Secure voice channel</span><span>All times local · 14:32</span></div>
         </div>
 
-        <div class="activity-panel"><div class="activity-heading"><span class="eyebrow">CHANNEL ACTIVITY</span><button class="clear-button" id="clearActivity">Clear</button></div><div class="activity-list" id="activityList"><div class="activity-row"><span class="activity-time">14:31</span><div class="activity-avatar orange">RK</div><div><strong>Riley Kim</strong><span> joined the channel</span></div><span class="activity-tag">JOINED</span></div><div class="activity-row"><span class="activity-time">14:29</span><div class="activity-avatar green">AM</div><div><strong>Alex Morgan</strong><span> started a voice session</span></div><span class="activity-tag live">LIVE</span></div></div></div>
+        <section class="video-room" id="videoRoom" hidden aria-label="Video call">
+          <div class="video-room-header"><span>VIDEO ROOM · <strong id="videoStatus">Connecting</strong></span><button class="video-control danger" id="leaveVideoButton">Leave call</button></div>
+          <div class="video-grid" id="videoGrid"><div class="video-tile local-video-tile"><video id="localVideo" autoplay muted playsinline></video><span>You · <span id="localVideoName">Jordan Davis</span></span></div></div>
+          <div class="video-controls"><button class="video-control" id="toggleCallMic">Mute mic</button><button class="video-control" id="toggleCamera">Turn camera off</button></div>
+        </section>
+
+        <div class="activity-panel"><div class="activity-heading"><span class="eyebrow">TEXT LOG</span><button class="clear-button" id="clearActivity">Clear</button></div><div class="activity-list" id="activityList"></div></div>
       </section>
 
-      <aside class="right-rail"><div class="rail-heading"><div><span class="eyebrow">PEOPLE HERE</span><h2>8 online</h2></div><button class="more-button" aria-label="More people options">•••</button></div><div class="presence-list" id="presenceList"><div class="person" data-person="Riley Kim"><div class="person-avatar orange">RK<span></span></div><div><strong>Riley Kim</strong><span>Chatting</span></div><span class="presence-state chatting" aria-label="Chatting"><i></i><i></i><i></i></span></div><div class="person" data-person="Alex Morgan"><div class="person-avatar green">AM<span></span></div><div><strong>Alex Morgan</strong><span>Speaking</span></div><span class="presence-state speaking" aria-label="Speaking">🔊</span></div><div class="person" data-person="Taylor Ng"><div class="person-avatar blue">TN<span></span></div><div><strong>Taylor Ng</strong><span>Chatting</span></div><span class="presence-state chatting" aria-label="Chatting"><i></i><i></i><i></i></span></div><div class="person" data-person="Sam Carter"><div class="person-avatar pink">SC<span></span></div><div><strong>Sam Carter</strong><span>Sent a chat</span></div><span class="presence-state messaged" aria-label="Sent a chat">✉</span></div><div class="person"><div class="person-avatar neutral">+4</div><div><strong>Other members</strong><span>Tap to view all</span></div></div></div><div class="quick-note"><span class="note-icon">✦</span><div><strong>Alpha note</strong><p>Voice transport is simulated in this preview. Connect a server to go live.</p></div></div></aside>
+      <aside class="right-rail"><div class="rail-heading"><div><span class="eyebrow">PEOPLE HERE</span><h2>8 online</h2></div><button class="more-button" aria-label="More people options">•••</button></div><div class="presence-list" id="presenceList"><div class="person" data-person="Riley Kim"><div class="person-avatar orange">RK<span></span></div><div><strong>Riley Kim</strong><span>Chatting</span></div><span class="presence-state chatting" aria-label="Chatting"><i></i><i></i><i></i></span></div><div class="person" data-person="Alex Morgan"><div class="person-avatar green">AM<span></span></div><div><strong>Alex Morgan</strong><span>Speaking</span></div><span class="presence-state speaking" aria-label="Speaking">🔊</span></div><div class="person" data-person="Taylor Ng"><div class="person-avatar blue">TN<span></span></div><div><strong>Taylor Ng</strong><span>Chatting</span></div><span class="presence-state chatting" aria-label="Chatting"><i></i><i></i><i></i></span></div><div class="person" data-person="Sam Carter"><div class="person-avatar pink">SC<span></span></div><div><strong>Sam Carter</strong><span>Sent a chat</span></div><span class="presence-state messaged" aria-label="Sent a chat">✉</span></div><div class="person"><div class="person-avatar neutral">+4</div><div><strong>Other members</strong><span>Tap to view all</span></div></div></div></aside>
     </main>
 
     <div class="chat-composer"><div class="chat-icon">✦</div><input id="chatInput" type="text" maxlength="160" placeholder="Send a message to Operations..." /><span class="char-count" id="charCount">0/160</span><button id="sendChat" class="send-button" aria-label="Send message">↑</button></div>
     <div class="toast-stack" id="toastStack" aria-live="polite"></div>
   </div>
 
-  <div class="modal-backdrop" id="channelModal" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button class="modal-close" id="closeChannelModal" aria-label="Close">×</button><span class="eyebrow">NEW CHANNEL</span><h2 id="modalTitle">Create a space to talk</h2><p>Make a channel for your crew, project, or moment.</p><label class="field-label">Channel name<input id="newChannelName" type="text" maxlength="24" placeholder="e.g. Night shift" /></label><div class="privacy-options"><button class="privacy-option selected" data-privacy="public"><span>◉</span><strong>Public</strong><small>Anyone in your network can join</small></button><button class="privacy-option" data-privacy="private"><span>◉</span><strong>Private</strong><small>Invite-only conversation</small></button></div><button class="create-channel-button" id="createChannel">Create channel <span>→</span></button></div></div>
-  <div class="modal-backdrop" id="profileModal" hidden><div class="modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="profileTitle"><button class="modal-close" id="closeProfileModal" aria-label="Close">×</button><span class="eyebrow">YOUR PROFILE</span><h2 id="profileTitle">Profile and audio</h2><p>Choose the name and headset this device will use in Porto Porto.</p><label class="field-label">Display name<input id="displayName" type="text" maxlength="24" value="Jordan Davis" placeholder="Your name" /></label><div class="audio-section"><h3>Audio devices</h3><p>Wired and Bluetooth headphones appear here after microphone permission is granted.</p><label class="device-field">Microphone<select id="microphoneSelect"><option>Default microphone</option></select></label><label class="device-field">Headphones / speaker<select id="speakerSelect"><option>Default output</option></select></label><div class="mic-permission" id="micPermission">Microphone permission not requested</div></div><button class="create-channel-button" id="saveProfile">Save changes <span>→</span></button></div></div>
+  <div class="modal-backdrop" id="channelModal" hidden><div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button class="modal-close" id="closeChannelModal" aria-label="Close">×</button><span class="eyebrow">NEW ROOM</span><h2 id="modalTitle">Create a room</h2><p>Make a public room or an invite-only space for this server.</p><label class="field-label">Room name<input id="newChannelName" type="text" maxlength="24" placeholder="e.g. Night shift" /></label><div class="privacy-options"><button class="privacy-option selected" data-privacy="public"><span>◉</span><strong>Public</strong><small>Anyone in this server can join</small></button><button class="privacy-option" data-privacy="private"><span>◉</span><strong>Private</strong><small>Invite-only conversation</small></button></div><button class="create-channel-button" id="createChannel">Create room <span>→</span></button></div></div>
+  <div class="modal-backdrop" id="profileModal" hidden><div class="modal profile-modal" role="dialog" aria-modal="true" aria-labelledby="profileTitle"><button class="modal-close" id="closeProfileModal" aria-label="Close">×</button><span class="eyebrow">YOUR PROFILE</span><h2 id="profileTitle">Edit profile</h2><p>Choose the name people see when you join a conversation.</p><label class="field-label">Display name<input id="displayName" type="text" maxlength="24" value="Jordan Davis" placeholder="Your name" /></label><div class="audio-section"><h3>Audio devices</h3><p>Wired and Bluetooth headphones appear here after microphone permission is granted.</p><label class="device-field">Microphone<select id="microphoneSelect"><option>Default microphone</option></select></label><label class="device-field">Headphones / speaker<select id="speakerSelect"><option>Default output</option></select></label><div class="mic-permission" id="micPermission">Microphone permission not requested</div></div><button class="create-channel-button" id="saveProfile">Save changes <span>→</span></button></div></div>
   <script src="app.js"></script>
 </body>
 </html>
